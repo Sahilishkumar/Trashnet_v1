@@ -1,17 +1,22 @@
 from flask import Flask, render_template, request
 import numpy as np
 from PIL import Image
-import tflite_runtime.interpreter as tflite
 
-app = Flask(__name__)
+try:
+    import tflite_runtime.interpreter as tflite
+    interpreter = tflite.Interpreter(model_path="model.tflite")
+except ImportError:
+    import tensorflow as tf
+    interpreter = tf.lite.Interpreter(model_path="model.tflite")
 
-interpreter = tflite.Interpreter(model_path="model.tflite")
 interpreter.allocate_tensors()
 
 input_details = interpreter.get_input_details()
 output_details = interpreter.get_output_details()
 
-with open("labels.txt") as f:
+app = Flask(__name__)
+
+with open("labels.txt", "r") as f:
     labels = [line.strip() for line in f]
 
 IMG_SIZE = (128,128)
