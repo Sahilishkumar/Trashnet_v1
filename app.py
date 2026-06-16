@@ -16,7 +16,7 @@ with open("labels.txt", "r") as f:
     labels = [line.strip() for line in f]
 
 # Change this only if your model uses a different input size
-IMG_SIZE = (224, 224)
+IMG_SIZE = (128,128)
 
 
 @app.route("/", methods=["GET", "POST"])
