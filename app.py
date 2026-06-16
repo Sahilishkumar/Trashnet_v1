@@ -1,21 +1,19 @@
 from flask import Flask, render_template, request
-import tensorflow as tf
 import numpy as np
 from PIL import Image
+import tflite_runtime.interpreter as tflite
 
 app = Flask(__name__)
 
-# Load model once when app starts
-model = tf.keras.models.load_model(
-    "model.keras",
-    compile=False
-)
+interpreter = tflite.Interpreter(model_path="model.tflite")
+interpreter.allocate_tensors()
 
-# Load class labels
-with open("labels.txt", "r") as f:
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
+
+with open("labels.txt") as f:
     labels = [line.strip() for line in f]
 
-# Change this only if your model uses a different input size
 IMG_SIZE = (128,128)
 
 
@@ -33,7 +31,10 @@ def home():
         img = np.array(image, dtype=np.float32) / 255.0
         img = np.expand_dims(img, axis=0)
 
-        pred = model.predict(img, verbose=0)
+        interpreter.set_tensor(input_details[0]["index"], img)
+        interpreter.invoke()
+
+        pred = interpreter.get_tensor(output_details[0]["index"])[0]
 
         prediction = labels[np.argmax(pred)]
         confidence = float(np.max(pred) * 100)
